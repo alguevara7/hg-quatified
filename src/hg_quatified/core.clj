@@ -1,6 +1,7 @@
 (ns hg-quatified.core
   (:use [clojure.java.io :only [file]]
         [clj-time.core :only [date-time year month day hour minute]]
+        [clj-time.coerce :only [from-date]]
         [incanter core stats charts])
   (:import [com.aragost.javahg.commands LogCommand]
            [com.aragost.javahg Repository]))
@@ -30,24 +31,27 @@
 (defn extract-principal [changeset]
   (re-find #"AG|KE|KA|AH|RC|KC" (.getMessage changeset)))
 
+(defn normalize [date]
+  (date-time (year date) (month date) (day date)))
+
 (defn retrieve-code-stats [start-date end-date]
   ""
   (let [repository (Repository/open (file "irm"))
         log (LogCommand/on repository)]
     (do (.date log (str (to-hg-date start-date) " to " (to-hg-date end-date)))
-        (let [result (.execute log (into-array String ["."]))]
-          (map (fn [[principal nodes]] {:principal principal :commits (count nodes)})
-               (seq (group-by #(:principal %)
-                              (map #(hash-map :principal (extract-principal %) :node (.getNode %)) result))))))))
+        (let [logs (.execute log (into-array String ["."]))]
+          (map #(hash-map :principal (extract-principal %)
+                          :node (.getNode %)
+                          :date (normalize (from-date (.getDate (.getTimestamp %)))))
+               (filter #(extract-principal %) logs))))))
 
-
-;
-(defn commits-chart [daily-coding-statistics]
+(defn commits-chart [changesets]
   ""
-  (let [dates (map #(:date %) daily-coding-statistics)
-        principals (map #(:principal %) daily-coding-statistics)
-        commits (map #(:commits %) daily-coding-statistics)]
-    (line-chart dates commits :group-by principals :legend true)))
+  (let [commits ($rollup count :node [:principal :date] (to-dataset changesets))
+        dates (sel commits :cols 0)
+        principals (sel commits :cols 1)
+        commits-per-day (sel commits :cols 2)]
+    (line-chart dates commits-per-day :group-by principals :legend true)))
 
 (defn make-dataset-from [daily-coding-statistics]
   ""
