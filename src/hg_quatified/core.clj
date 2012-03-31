@@ -34,7 +34,7 @@
 (defn normalize [date]
   (date-time (year date) (month date) (day date)))
 
-(defn retrieve-code-stats [start-date end-date]
+(defn retrieve-changesets [start-date end-date]
   ""
   (let [repository (Repository/open (file "irm"))
         log (LogCommand/on repository)]
@@ -42,22 +42,40 @@
         (let [logs (.execute log (into-array String ["."]))]
           (map #(hash-map :principal (extract-principal %)
                           :node (.getNode %)
+                          :commits 1
                           :date (normalize (from-date (.getDate (.getTimestamp %)))))
                (filter #(extract-principal %) logs))))))
 
+(defn filter-by [principal changesets]
+  (seq (filter (fn [{p :principal}] (= p principal)) changesets)))
+
+(defn normalize-principal-changesets [date changesets principals]
+  (map #(or (get changesets %)
+            [{:date date :principal % :commits 0 :node nil}])
+       principals))
+
+
+(defn normalize-changesets [changesets]
+  ""
+  (for [[date changesets-by-date] (seq (group-by :date changesets))
+        changesets-by-principal (normalize-principal-changesets date
+                                                                (group-by :principal changesets-by-date)
+                                                                (into #{} (keys (group-by :principal changesets))))
+        changeset changesets-by-principal]
+    changeset))
+
 (defn commits-chart [changesets]
   ""
-  (let [commits ($rollup count :node [:principal :date] (to-dataset changesets))
+  (let [commits ($rollup sum :commits [:principal :date] (to-dataset (normalize-changesets changesets)))
         dates (sel commits :cols 0)
         principals (sel commits :cols 1)
         commits-per-day (sel commits :cols 2)]
-    (line-chart dates commits-per-day :group-by principals :legend true)))
+    (scatter-plot (map #(.getMillis (.toInstant %)) dates)
+                  commits-per-day
+                  :group-by principals
+                  :legend true)))
 
-(defn make-dataset-from [daily-coding-statistics]
-  ""
-  (for [[date coding-statistics] (seq daily-coding-statistics)
-        [principal coding-statistic] (seq coding-statistics)]
-    {:date date :principal principal :commits (get coding-statistic :commits)}))
+
 ;; commits per day
 
 ;; files changed per day
