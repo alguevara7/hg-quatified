@@ -16,11 +16,14 @@
 (defn normalize [date]
   (date-time (year date) (month date) (day date)))
 
-(defn retrieve-lines-changed [repository revision]
+(defn retrieve-diff [repository revision]
   (let [diff (DiffCommand/on repository)]
     (.change diff (str revision))
-    (- (count (filter #(re-find #"^[\+\-].*" %) (split-lines (.execute diff (into-array String [])))))
-       2)))
+    (.execute diff (into-array String []))))
+
+(defn calculate-lines-changed [diff]
+  (- (count (filter #(re-find #"^[\+\-].*" %) (split-lines diff)))
+     2))
 
 (defn retrieve-changesets [start-date end-date]
   ""
@@ -32,7 +35,7 @@
                           :node (.getNode %)
                           :revision (.getRevision %)
                           :commits 1
-                          :lines-changed (retrieve-lines-changed repository (.getRevision %))
+                          :lines-changed (calculate-lines-changed (retrieve-diff repository (.getRevision %)))
                           :date (normalize (from-date (.getDate (.getTimestamp %)))))
                (filter #(extract-principal %) logs)))))
 
