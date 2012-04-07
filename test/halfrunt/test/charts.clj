@@ -12,4 +12,7 @@
     (is (= "https://chart.googleapis.com/chart?cht=p3&chs=250x100&chd=t:60,40&"
            (chart-to-url (array-map :type "p3" :size "250x100" :data "t:60,40"))) "No tests have been written.")))
 
+(defn date-chart [dataset date-key value-key group-by-key]
+  )
+
 ;;(view {:type "lc" :size "250x100" :data "t:60,40,30,20,20|6,41,32,25,27" :color "FF0000,00FF00" })
