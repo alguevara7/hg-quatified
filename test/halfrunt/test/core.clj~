@@ -1,5 +1,5 @@
-(ns hg-quatified.test.core
-  (:use [hg-quatified.core]
+(ns halfrunt.test.core
+  (:use [halfrunt.core]
         [clojure.test]
         [clj-time.core :only [date-time]]))
 
