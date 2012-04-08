@@ -1,1 +1,1 @@
-install: lein protobuf install
+language: clojure
