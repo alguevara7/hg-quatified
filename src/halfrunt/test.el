@@ -1,1 +1,1 @@
-(set-frame-parameter (selected-frame) 'alpha '(90 90))
+(set-frame-parameter (selected-frame) 'alpha '(85 85))

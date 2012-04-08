@@ -1,0 +1,7 @@
+(ns halfrunt.date-utils
+  (:import [org.joda.time LocalDate]))
+
+(defn date-range [#^LocalDate start-dt #^LocalDate end-dt]
+  (if (< start-dt end-dt)
+    (iterate #(if (<= % end-dt) (.plusDays start-dt 1)) start-dt)
+    []))

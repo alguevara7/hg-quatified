@@ -11,7 +11,7 @@
   (str (year datetime) "-" (month datetime) "-" (day datetime) " " (hour datetime) ":" (minute datetime)))
 
 (defn extract-principal [changeset]
-  (re-find #"AG|KE|KA|AH|RC|KC" (.getMessage changeset)))
+  (re-find #"AG|KE|KA|AH|RC|KC|MG" (.getMessage changeset)))
 
 (defn normalize [date]
   (date-time (year date) (month date) (day date)))
@@ -21,12 +21,15 @@
     (.change diff (str revision))
     (.execute diff (into-array String []))))
 
-(defn calculate-lines-changed [diff]
+(defn calculate-lines-changed
+  "Blahhhhhh."
+  [diff]
   (- (count (filter #(re-find #"^[\+\-].*" %) (split-lines diff)))
      2))
 
-(defn retrieve-changesets [start-date end-date]
-  ""
+(defn retrieve-changesets
+  "Retrieves changesets from a mercurial repository located in the folder <b>irm</b>, relative to the current folder."    
+  [start-date end-date]
   (let [repository (Repository/open (file "irm"))
         log (LogCommand/on repository)]
     (.date log (str (to-hg-date start-date) " to " (to-hg-date end-date)))
