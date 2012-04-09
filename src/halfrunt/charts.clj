@@ -20,13 +20,13 @@
                         (seq chart)))))
 
 (defn hello-chart []
-  {:type "lxy" :size "250x100" :data "10,20|60,40|10,20|30,50" :colors "00FF00,FF0000" :legend-labels "P1|P2"})
+  {:type "lxy0" :size "250x100" :data "10,20|60,40|10,20|30,50" :colors "00FF00,FF0000" :legend-labels "P1|P2"})
 
 (defn view [chart] 
   (doto (JFrame. (:title chart))
     (.add (JScrollPane.
           (JLabel. (ImageIcon. (ImageIO/read (as-url (chart-to-url chart)))))))
-    (.setSize 400 600) ;;FIXME get chart's size
+    (.setSize 800 600) ;;FIXME get chart's size
     (.setVisible true)))
 
 (defn x-values [start-dt end-dt]
@@ -41,12 +41,20 @@
 
 (defn to-date-chart-data [start-dt end-dt data]
   (let [principals (into #{} (keys (group-by :principal data)))]
-    (join "|" (map #(str (x-values start-dt end-dt) "|" (y-values start-dt end-dt % data)) principals))))
+    (join "|" (map #(str (y-values start-dt end-dt % data)) principals))))
+
+;(join "|" (map #(str (x-values start-dt end-dt) "|" (y-values start-dt end-dt % data)) principals))
 
 (defn date-chart [data start-dt end-dt date-key value-key group-by-key]
-  {:type "lxy"
+  {:type "lc"
    :size "320x200"
    :data (to-date-chart-data start-dt end-dt data)
-   :colors "00000F,0000FF,000FFF,00FFFF,0FFFFF,FFFFFF,00FF00"
+   ;:colors "00000F,0000FF,000FFF,00FFFF,0FFFFF,FFFFFF,00FF00"
    })
 
+;;TODO add sum by parameter
+(defn group-data [changesets]
+  (mapcat (fn [[principal changesets]]
+            (map #(hash-map :principal principal :date (first %) :lines-changed (second %))
+                 (apply merge-with + (map #(hash-map (:date %) (:lines-changed %)) changesets))))
+          (seq (group-by #(:principal %) changesets))))
