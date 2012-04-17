@@ -3,7 +3,7 @@
         [clojure.string :only [split-lines]]
         [clj-time.core :only [date-time year month day hour minute]]
         [clj-time.coerce :only [from-date]]
-        [incanter core stats charts])
+        [halfrunt.charts : only []])
   (:import [com.aragost.javahg.commands LogCommand DiffCommand]
            [com.aragost.javahg Repository]))
 

@@ -3029,30 +3029,60 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>halfrunt -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">halfrunt</h1><h2 class="project-version">1.0.0-SNAPSHOT</h2><br /><p>FIXME: write description</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-time</td><td class="dotted"><hr /></td><td class="dep-version">0.3.7</td></tr><tr><td class="dep-name">incanter/incanter-core</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">incanter/incanter-charts</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">com.aragost.javahg/javahg</td><td class="dotted"><hr /></td><td class="dep-version">0.2</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#halfrunt.charts">halfrunt.charts</a></li><li><a href="#halfrunt.core">halfrunt.core</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#halfrunt.charts" name="halfrunt.charts"><h1 class="project-name">halfrunt.charts</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">clj-time</td><td class="dotted"><hr /></td><td class="dep-version">0.3.7</td></tr><tr><td class="dep-name">incanter/incanter-core</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">incanter/incanter-charts</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">com.aragost.javahg/javahg</td><td class="dotted"><hr /></td><td class="dep-version">0.2</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#halfrunt.charts">halfrunt.charts</a></li><li><a href="#halfrunt.core">halfrunt.core</a></li><li><a href="#halfrunt.date-utils">halfrunt.date-utils</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#halfrunt.charts" name="halfrunt.charts"><h1 class="project-name">halfrunt.charts</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns halfrunt.charts
   (:use [clojure.core]
-        [clojure.java.io :only [as-url]])
+        [clojure.java.io :only [as-url]]
+        [clojure.string :only [join]]
+        [halfrunt.date-utils :only [date-range]]
+        [clj-time.core :only [year month day]])
   (:import [javax.swing JTable JScrollPane JFrame JLabel ImageIcon]
           [javax.imageio ImageIO]
           [java.net URL]))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn- chart-to-url [chart]
+</td><td class="codes"><pre class="brush: clojure">(defn chart-to-url [chart]
   (apply str (cons &quot;https://chart.googleapis.com/chart?&quot;
                    (map (fn [[key value]] (cond (= :type key) (str &quot;cht=&quot; value &quot;&amp;&quot;)
                                                 (= :size key) (str &quot;chs=&quot; value &quot;&amp;&quot;)
-                                                (= :data key) (str &quot;chd=&quot; value &quot;&amp;&quot;)
+                                                (= :data key) (str &quot;chd=t:&quot; value &quot;&amp;&quot;)
                                                 (= :colors key) (str &quot;chco=&quot; value &quot;&amp;&quot;)
-                                                (= :fills key) (str &quot;chm=&quot; value &quot;&amp;&quot;) ;;FIXME abstract a bit
+                                                (= :fills key) (str &quot;chm=&quot; value &quot;&amp;&quot;)
+                                                (= :legend-labels key) (str &quot;chdl=&quot; value &quot;&amp;&quot;)
+                                                (= :visible-axes key (str &quot;chxt=&quot; value &quot;&amp;&quot;))
+                                                (= :axis-range key (str &quot;chxr=&quot; value &quot;&amp;&quot;))                                                
                                                 :else ))
                         (seq chart)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn hello-chart []
-  {:type &quot;p3&quot; :size &quot;250x100&quot; :data &quot;t:60,40&quot;})</pre></td></tr><tr><td class="docs">
+  {:type &quot;lxy0&quot; :size &quot;250x100&quot; :data &quot;10,20|60,40|10,20|30,50&quot; :colors &quot;00FF00,FF0000&quot; :legend-labels &quot;P1|P2&quot;})</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn view [chart] 
   (doto (JFrame. (:title chart))
     (.add (JScrollPane.
           (JLabel. (ImageIcon. (ImageIO/read (as-url (chart-to-url chart)))))))
-    (.setSize 400 600) ;;FIXME get chart's size
-    (.setVisible true)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#halfrunt.core" name="halfrunt.core"><h1 class="project-name">halfrunt.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+    (.setSize 800 600) ;;FIXME get chart's size
+    (.setVisible true)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn x-values [start-dt end-dt]
+  (join &quot;,&quot; (map #(str (* (- (.getDayOfYear %) 74) 4)) (date-range start-dt end-dt))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn lines-changed [principal dt data]
+  (apply + (map #(:lines-changed %) (filter #(and (= principal (:principal %))
+                                                  (= dt (:date %))) data))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn y-values [start-dt end-dt principal data]
+  (join &quot;,&quot; (map #(lines-changed principal % data) (date-range start-dt end-dt))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn to-date-chart-data [start-dt end-dt data]
+  (let [principals (into #{} (keys (group-by :principal data)))]
+    (join &quot;|&quot; (map #(str (y-values start-dt end-dt % data)) principals))))</pre></td></tr><tr><td class="docs"><p>(join "|" (map #(str (x-values start-dt end-dt) "|" (y-values start-dt end-dt % data)) principals))</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn date-chart [data start-dt end-dt date-key value-key group-by-key]
+  {:type &quot;lc&quot;
+   :size &quot;320x200&quot;
+   :data (to-date-chart-data start-dt end-dt data)
+   :colors &quot;0000FF,0000FF,00FFFF,00FFFF,00FFFF,FFFFFF,00FF00&quot;
+   :visible-axes &quot;y&quot;
+   :axis-range &quot;0,0,1700&quot;
+   })</pre></td></tr><tr><td class="docs"><p>TODO add sum by parameter (interesting but not needed)</p>
+</td><td class="codes"><pre class="brush: clojure">(defn group-data [changesets]
+  (mapcat (fn [[principal changesets]]
+            (map #(hash-map :principal principal :date (first %) :lines-changed (second %))
+                 (apply merge-with + (map #(hash-map (:date %) (:lines-changed %)) changesets))))
+          (seq (group-by #(:principal %) changesets))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#halfrunt.core" name="halfrunt.core"><h1 class="project-name">halfrunt.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns halfrunt.core
   (:use [clojure.java.io :only [file]]
         [clojure.string :only [split-lines]]
@@ -3064,17 +3094,17 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"><pre class="brush: clojure">(defn to-hg-date [datetime]
   (str (year datetime) &quot;-&quot; (month datetime) &quot;-&quot; (day datetime) &quot; &quot; (hour datetime) &quot;:&quot; (minute datetime)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn extract-principal [changeset]
-  (re-find #&quot;AG|KE|KA|AH|RC|KC&quot; (.getMessage changeset)))</pre></td></tr><tr><td class="docs">
+  (re-find #&quot;AG|KE|KA|AH|RC|KC|MG&quot; (.getMessage changeset)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn normalize [date]
   (date-time (year date) (month date) (day date)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn retrieve-diff [repository revision]
   (let [diff (DiffCommand/on repository)]
     (.change diff (str revision))
-    (.execute diff (into-array String []))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn calculate-lines-changed [diff]
-  &quot;Blahhhhhh.&quot;
+    (.execute diff (into-array String []))))</pre></td></tr><tr><td class="docs"><p>takes a 'diff' and calculates the number of lines changed.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn calculate-lines-changed
+  [diff]
   (- (count (filter #(re-find #&quot;^[\+\-].*&quot; %) (split-lines diff)))
-     2))</pre></td></tr><tr><td class="docs"><p>Retrieves changesets from a mercurial repository located in the folder <b>irm</b>, relative to the current folder.</p>
+     2))</pre></td></tr><tr><td class="docs"><p>retrieves changesets from a mercurial repository located in the folder <b>irm</b>, relative to the current folder.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn retrieve-changesets
   [start-date end-date]
   (let [repository (Repository/open (file &quot;irm&quot;))
@@ -3124,5 +3154,14 @@ net.brehaut.ClojureTools = (function (SH) {
 </td><td class="codes"></td></tr><tr><td class="docs"><p>all the above per person (one chart for each person)</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>questiuons it will also answer ?
   are we working too much over the weekend ?</p>
-</td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+</td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#halfrunt.date-utils" name="halfrunt.date-utils"><h1 class="project-name">halfrunt.date-utils</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns halfrunt.date-utils
+  (:import [org.joda.time DateTime]))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn future-date-seq [dt]
+  (iterate #(.plusDays % 1) dt))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn past-date-seq [dt]
+  (iterate #(.minusDays % 1) dt))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn date-range [start-dt end-dt]
+  (take-while #(or (.isBefore % end-dt) (.isEqual % end-dt))
+              (future-date-seq start-dt)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>

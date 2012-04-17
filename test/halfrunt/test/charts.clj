@@ -7,7 +7,7 @@
   "Refers private fns from ns and runs tests in context."
   `(let ~(reduce #(conj %1 %2 `(ns-resolve '~ns '~%2)) [] fns)
      ~@tests))
-
+  
 (with-private-fns [halfrunt.charts [chart-to-url]]
   (deftest test-chart-to-url
     (is (= "https://chart.googleapis.com/chart?cht=p3&chs=250x100&chd=t:60,40&"

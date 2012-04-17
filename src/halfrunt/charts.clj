@@ -16,6 +16,8 @@
                                                 (= :colors key) (str "chco=" value "&")
                                                 (= :fills key) (str "chm=" value "&")
                                                 (= :legend-labels key) (str "chdl=" value "&")
+                                                (= :visible-axes key (str "chxt=" value "&"))
+                                                (= :axis-range key (str "chxr=" value "&"))                                                
                                                 :else ""))
                         (seq chart)))))
 
@@ -34,13 +36,28 @@
 
 (defn lines-changed [principal dt data]
   (apply + (map #(:lines-changed %) (filter #(and (= principal (:principal %))
-                                  (= dt (:date %))) data))))
+                                                  (= dt (:date %))) data))))
 
+(defn spy [value]
+  (println value)
+  value)
+
+(def *limit* 10000.0)
 (defn y-values [start-dt end-dt principal data]
-  (join "," (map #(lines-changed principal % data) (date-range start-dt end-dt))))
+  (join ","
+        (map (fn [date]
+               (let [change-count (lines-changed principal date data)
+                     limit (min *limit* change-count)]
+                 (spy (if (= change-count 0)
+                        0.0
+                        (* (/ (min change-count limit) *limit*) 100.0)))))
+             (date-range start-dt end-dt))))
+
+(defn all-principals [data]
+  (into #{} (spy (keys (group-by :principal data)))))
 
 (defn to-date-chart-data [start-dt end-dt data]
-  (let [principals (into #{} (keys (group-by :principal data)))]
+  (let [principals #{"RC"}]
     (join "|" (map #(str (y-values start-dt end-dt % data)) principals))))
 
 ;(join "|" (map #(str (x-values start-dt end-dt) "|" (y-values start-dt end-dt % data)) principals))
@@ -49,10 +66,12 @@
   {:type "lc"
    :size "320x200"
    :data (to-date-chart-data start-dt end-dt data)
-   ;:colors "00000F,0000FF,000FFF,00FFFF,0FFFFF,FFFFFF,00FF00"
+;   :colors "0000FF,0000FF,00FFFF,00FFFF,00FFFF,FFFFFF,00FF00"
+;   :visible-axes "x, y"
+;   :axis-range "0,0,100"
    })
 
-;;TODO add sum by parameter
+;;TODO add sum by parameter (interesting but not needed)
 (defn group-data [changesets]
   (mapcat (fn [[principal changesets]]
             (map #(hash-map :principal principal :date (first %) :lines-changed (second %))
