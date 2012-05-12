@@ -3,7 +3,7 @@
         [clojure.string :only [split-lines]]
         [clj-time.core :only [date-time year month day hour minute]]
         [clj-time.coerce :only [from-date]]
-        [incanter core stats charts])
+        [halfrunt.charts :only [date-chart view]])
   (:import [com.aragost.javahg.commands LogCommand DiffCommand]
            [com.aragost.javahg Repository]))
 
@@ -12,9 +12,6 @@
 
 (defn extract-principal [changeset]
   (re-find #"AG|KE|KA|AH|RC|KC|MG" (.getMessage changeset)))
-
-(defn normalize [date]
-  (date-time (year date) (month date) (day date)))
 
 (defn retrieve-diff [repository revision]
   (let [diff (DiffCommand/on repository)]
@@ -39,7 +36,7 @@
                           :revision (.getRevision %)
                           :commits 1
                           :lines-changed (calculate-lines-changed (retrieve-diff repository (.getRevision %)))
-                          :date (normalize (from-date (.getDate (.getTimestamp %)))))
+                          :date (from-date (.getDate (.getTimestamp %))))
                (filter #(extract-principal %) logs)))))
 
 (defn filter-by
@@ -47,38 +44,9 @@
   [principal changesets]
   (seq (filter (fn [{p :principal}] (= p principal)) changesets)))
 
-(defn normalize-principal-changesets [date changesets principals]
-  (map #(or (get changesets %)
-            [{:date date :principal % :commits 0 :node nil}])
-       principals))
-
-(defn normalize-changesets [changesets]
-  ""
-  (for [[date changesets-by-date] (seq (group-by :date changesets))
-        changesets-by-principal (normalize-principal-changesets date
-                                                                (group-by :principal changesets-by-date)
-                                                                (into #{} (keys (group-by :principal changesets))))
-        changeset changesets-by-principal]
-    changeset))
-
-(defn commits-chart [changesets]
-  ""
-  (let [commits ($rollup sum :commits [:principal :date] (to-dataset (normalize-changesets changesets)))
-        dates (sel commits :cols 0)
-        principals (sel commits :cols 1)
-        commits-per-day (sel commits :cols 2)
-        dates (map #(.getMillis (.toInstant %)) dates)]
-    (xy-plot dates
-                  commits-per-day
-                  :group-by principals
-                  :legend true
-                  :x-label "time"
-                  :y-label "commits per day"
-                  :density? false)))
-
 (defn -main [& args]
-  (let [changesets (retrieve-changesets (date-time 2012 3 1) (date-time 2012 4 1))]
-    (view (commits-chart changesets))))
+  (let [changesets (retrieve-changesets (date-time 2012 2 1) (date-time 2012 4 1))]
+    (view (date-chart changesets (date-time 2012 2 1) (date-time 2012 4 1) :date :lines-changed :principal))))
 
 ;; commits per day
 

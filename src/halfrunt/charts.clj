@@ -8,6 +8,8 @@
           [javax.imageio ImageIO]
           [java.net URL]))
 
+(def y-limit 10000.0)
+
 (defn chart-to-url [chart]
   (apply str (cons "https://chart.googleapis.com/chart?"
                    (map (fn [[key value]] (cond (= :type key) (str "cht=" value "&")
@@ -31,41 +33,43 @@
     (.setSize 800 600) ;;FIXME get chart's size
     (.setVisible true)))
 
-(defn x-values [start-dt end-dt]
-  (join "," (map #(str (* (- (.getDayOfYear %) 74) 4)) (date-range start-dt end-dt))))
+(defn- same-day [first-dt second-dt]
+  (and (= (day first-dt) (day second-dt))
+       (= (month first-dt) (month second-dt))
+       (= (year first-dt) (year second-dt))))
 
 (defn lines-changed [principal dt data]
   (apply + (map #(:lines-changed %) (filter #(and (= principal (:principal %))
-                                                  (= dt (:date %))) data))))
+                                                  (same-day dt (:date %)))
+                                            data))))
 
 (defn spy [value]
   (println value)
   value)
 
-(def *limit* 10000.0)
-(defn y-values [start-dt end-dt principal data]
+(defn y-values
+  "0 >= 'y-values' <= 100"
+  [start-dt end-dt principal data]
   (join ","
         (map (fn [date]
                (let [change-count (lines-changed principal date data)
-                     limit (min *limit* change-count)]
-                 (spy (if (= change-count 0)
+                     limit (min y-limit change-count)]
+                 (if (= change-count 0)
                         0.0
-                        (* (/ (min change-count limit) *limit*) 100.0)))))
+                        (* (/ (min change-count limit) y-limit) 100.0))))
              (date-range start-dt end-dt))))
 
 (defn all-principals [data]
-  (into #{} (spy (keys (group-by :principal data)))))
+  (into #{} (keys (group-by :principal data))))
 
-(defn to-date-chart-data [start-dt end-dt data]
-  (let [principals #{"RC"}]
-    (join "|" (map #(str (y-values start-dt end-dt % data)) principals))))
+(defn to-date-chart-data [data start-date end-date]
+  (let [principals #{"AG"}]
+    (join "|" (map #(str (y-values start-date end-date % data)) principals))))
 
-;(join "|" (map #(str (x-values start-dt end-dt) "|" (y-values start-dt end-dt % data)) principals))
-
-(defn date-chart [data start-dt end-dt date-key value-key group-by-key]
+(defn date-chart [data start-date end-date date-key value-key group-by-key & options]
   {:type "lc"
    :size "320x200"
-   :data (to-date-chart-data start-dt end-dt data)
+   :data (to-date-chart-data start-date end-date data)
 ;   :colors "0000FF,0000FF,00FFFF,00FFFF,00FFFF,FFFFFF,00FF00"
 ;   :visible-axes "x, y"
 ;   :axis-range "0,0,100"
