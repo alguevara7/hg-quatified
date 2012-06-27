@@ -1,8 +1,0 @@
-(ns halfrunt.date-utils
-  (:import org.joda.time LocalDate))
-
-(defn furture-date-seq []
-  )
-
-(defn past-date-seq []
-  )

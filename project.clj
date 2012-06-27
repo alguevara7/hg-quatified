@@ -1,11 +1,9 @@
-(defproject halfrunt "1.0.0-SNAPSHOT"
-  :description "FIXME: write description"
-  :plugins [[lein-swank "1.4.4"]]
-  :dev-dependencies [[lein-marginalia "0.7.0"]]
-  :dependencies [[org.clojure/clojure "1.3.0"]
-                 [clj-time "0.3.7"]
-;;                 [joda-time/joda-time "2.0"]
-                 [incanter/incanter-core "1.3.0"]
-                 [incanter/incanter-charts "1.3.0"]
+(defproject halfrunt "0.0.1-SNAPSHOT"
+  :description "your person code doctor"
+  :plugins [[lein-swank "1.4.4"]
+            [lein-marginalia "0.7.1"]]
+  :dependencies [[org.clojure/clojure "1.4.0"]
+                 [clj-time "0.4.3"]
+                 [noir/noir "1.3.0-beta7"]
                  [com.aragost.javahg/javahg "0.2"]])
 

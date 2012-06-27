@@ -1,4 +1,4 @@
-(ns halfrunt.date-utils
+(ns utils
   (:import [org.joda.time DateTime]))
 
 (defn future-date-seq [dt]
